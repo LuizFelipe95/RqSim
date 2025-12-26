@@ -1,0 +1,6 @@
+﻿Dx12WinForm ────────┐
+                    ├──> RqSimRenderingEngine (общая библиотека)
+RqSimUI ────────────┘         │
+                              ├── ImGuiDx12Renderer.cs (исправлен)
+                              ├── Dx12Shaders.cs (исправлен)
+                              └── Dx12RenderHost.cs

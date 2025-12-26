@@ -1,0 +1,109 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11310.294
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimGraphEngine", "RqSimGraphEngine\RqSimGraphEngine.csproj", "{2C9C1D91-5F17-C854-7CDF-9B0D17FE5B2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimConsole", "RqSimConsole\RqSimConsole.csproj", "{BD345CB3-F568-410C-8594-4CAC719DF36C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimEngineApi", "RqSimEngineApi\RqSimEngineApi.csproj", "{3ED7E4EF-7EBC-4ECE-A18C-1D94D724CC9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimRenderingEngine", "RqSimRenderingEngine\RqSimRenderingEngine.csproj", "{7EFED451-DD63-441A-B160-62E5D6296609}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D7F19D9B-F58B-4778-A2F0-E7524810FD61}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimUI", "RqSimUI\RqSimUI.csproj", "{CC4CD584-1F93-2BC5-D0AE-0D50B21C076D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimRenderingEngine.Abstractions", "RqSimRenderingEngine.Abstractions\RqSimRenderingEngine.Abstractions.csproj", "{AD7620DA-7743-90D9-5928-20A65CCF679F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rendering", "Rendering", "{405FB3F3-3AF3-4CDC-B5E4-F5A037B75A92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhysxPluginsForm", "RqSim.PluginManager.UI\PhysxPluginsForm.csproj", "{8529948B-8B2B-4BD6-A385-D4499F7962B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimGPUCPUTests", "Tests\RqSimGPUCPUTests\RqSimGPUCPUTests.csproj", "{EC7B87CD-822A-657D-325C-E318617D8EA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqsimExperimetsTests", "Tests\RqsimExperimetsTests\RqsimExperimetsTests.csproj", "{5844672E-99AF-CD10-CF7D-BF8315EC6127}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimRenderingEngine.Tests", "Tests\RqSimRenderingEngine.Tests\RqSimRenderingEngine.Tests.csproj", "{2B359E8E-CDD2-7ECE-0E38-1B831435B02B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dx12WinForm", "Dx12WinForm\Dx12WinForm.csproj", "{C10E81D5-6434-4B9A-83D7-D639B7CB9D1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSim3DForm", "RqSim3DForm\RqSim3DForm.csproj", "{05E2C3F3-4B99-4AC8-AA14-8904D0F4E2E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RqSimRenderingEngine.Dx12Tests", "Tests\RqSimRenderingEngine.Dx12Tests\RqSimRenderingEngine.Dx12Tests.csproj", "{32A84C33-4700-AC9E-F3BF-DC9FF106403F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C9C1D91-5F17-C854-7CDF-9B0D17FE5B2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C9C1D91-5F17-C854-7CDF-9B0D17FE5B2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C9C1D91-5F17-C854-7CDF-9B0D17FE5B2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C9C1D91-5F17-C854-7CDF-9B0D17FE5B2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD345CB3-F568-410C-8594-4CAC719DF36C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD345CB3-F568-410C-8594-4CAC719DF36C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD345CB3-F568-410C-8594-4CAC719DF36C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD345CB3-F568-410C-8594-4CAC719DF36C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ED7E4EF-7EBC-4ECE-A18C-1D94D724CC9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ED7E4EF-7EBC-4ECE-A18C-1D94D724CC9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ED7E4EF-7EBC-4ECE-A18C-1D94D724CC9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ED7E4EF-7EBC-4ECE-A18C-1D94D724CC9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EFED451-DD63-441A-B160-62E5D6296609}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EFED451-DD63-441A-B160-62E5D6296609}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EFED451-DD63-441A-B160-62E5D6296609}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EFED451-DD63-441A-B160-62E5D6296609}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC4CD584-1F93-2BC5-D0AE-0D50B21C076D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC4CD584-1F93-2BC5-D0AE-0D50B21C076D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC4CD584-1F93-2BC5-D0AE-0D50B21C076D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC4CD584-1F93-2BC5-D0AE-0D50B21C076D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD7620DA-7743-90D9-5928-20A65CCF679F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD7620DA-7743-90D9-5928-20A65CCF679F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD7620DA-7743-90D9-5928-20A65CCF679F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD7620DA-7743-90D9-5928-20A65CCF679F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8529948B-8B2B-4BD6-A385-D4499F7962B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8529948B-8B2B-4BD6-A385-D4499F7962B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8529948B-8B2B-4BD6-A385-D4499F7962B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8529948B-8B2B-4BD6-A385-D4499F7962B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC7B87CD-822A-657D-325C-E318617D8EA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC7B87CD-822A-657D-325C-E318617D8EA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC7B87CD-822A-657D-325C-E318617D8EA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC7B87CD-822A-657D-325C-E318617D8EA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5844672E-99AF-CD10-CF7D-BF8315EC6127}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5844672E-99AF-CD10-CF7D-BF8315EC6127}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5844672E-99AF-CD10-CF7D-BF8315EC6127}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5844672E-99AF-CD10-CF7D-BF8315EC6127}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B359E8E-CDD2-7ECE-0E38-1B831435B02B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B359E8E-CDD2-7ECE-0E38-1B831435B02B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B359E8E-CDD2-7ECE-0E38-1B831435B02B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B359E8E-CDD2-7ECE-0E38-1B831435B02B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C10E81D5-6434-4B9A-83D7-D639B7CB9D1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C10E81D5-6434-4B9A-83D7-D639B7CB9D1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C10E81D5-6434-4B9A-83D7-D639B7CB9D1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C10E81D5-6434-4B9A-83D7-D639B7CB9D1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05E2C3F3-4B99-4AC8-AA14-8904D0F4E2E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05E2C3F3-4B99-4AC8-AA14-8904D0F4E2E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05E2C3F3-4B99-4AC8-AA14-8904D0F4E2E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05E2C3F3-4B99-4AC8-AA14-8904D0F4E2E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32A84C33-4700-AC9E-F3BF-DC9FF106403F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32A84C33-4700-AC9E-F3BF-DC9FF106403F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32A84C33-4700-AC9E-F3BF-DC9FF106403F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32A84C33-4700-AC9E-F3BF-DC9FF106403F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7EFED451-DD63-441A-B160-62E5D6296609} = {405FB3F3-3AF3-4CDC-B5E4-F5A037B75A92}
+		{AD7620DA-7743-90D9-5928-20A65CCF679F} = {405FB3F3-3AF3-4CDC-B5E4-F5A037B75A92}
+		{EC7B87CD-822A-657D-325C-E318617D8EA2} = {D7F19D9B-F58B-4778-A2F0-E7524810FD61}
+		{5844672E-99AF-CD10-CF7D-BF8315EC6127} = {D7F19D9B-F58B-4778-A2F0-E7524810FD61}
+		{2B359E8E-CDD2-7ECE-0E38-1B831435B02B} = {D7F19D9B-F58B-4778-A2F0-E7524810FD61}
+		{32A84C33-4700-AC9E-F3BF-DC9FF106403F} = {D7F19D9B-F58B-4778-A2F0-E7524810FD61}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C2DC01DB-260E-4260-8F81-94F275C9A237}
+	EndGlobalSection
+EndGlobal

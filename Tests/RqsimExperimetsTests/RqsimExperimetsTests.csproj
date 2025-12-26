@@ -1,0 +1,29 @@
+﻿<Project Sdk="MSTest.Sdk/4.0.1">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UseVSTest>true</UseVSTest>
+		<UseWindowsForms>true</UseWindowsForms>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\RqSimGraphEngine\RqSimGraphEngine.csproj" />
+		<ProjectReference Include="..\..\RqSimEngineApi\RqSimEngineApi.csproj" />
+		<ProjectReference Include="..\..\RqSim.PluginManager.UI\PhysxPluginsForm.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Update="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Update="MSTest.TestAdapter" Version="4.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Update="MSTest.TestFramework" Version="4.0.2" />
+	</ItemGroup>
+</Project>

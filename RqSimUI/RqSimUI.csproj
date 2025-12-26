@@ -1,0 +1,110 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<PlatformTarget>x64</PlatformTarget>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Docs\docs\InProgress\hardsciencemode.md" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Arch" Version="2.1.0" />
+
+		<!-- ImGui for immediate mode UI -->
+		<PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+
+		<!-- Legacy drawing panel -->
+		<PackageReference Include="iSukces.DrawingPanel" Version="1.25.1203.52" />
+
+		<!-- SIMD operations (usually included but explicit for clarity) -->
+		<PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\RqSim.PluginManager.UI\PhysxPluginsForm.csproj" />
+		<ProjectReference Include="..\RqSimEngineApi\RqSimEngineApi.csproj" />
+		<ProjectReference Include="..\RqSimGraphEngine\RqSimGraphEngine.csproj" />
+
+		<!-- Shared abstractions (interfaces) -->
+		<ProjectReference Include="..\RqSimRenderingEngine.Abstractions\RqSimRenderingEngine.Abstractions.csproj" />
+		<ProjectReference Include="..\RqSimRenderingEngine\RqSimRenderingEngine.csproj" />
+		
+		<!-- Standalone 3D form -->
+		<ProjectReference Include="..\RqSim3DForm\RqSim3DForm.csproj" />
+		
+		<!-- Ensure RqSimConsole is built so it can be copied -->
+		<ProjectReference Include="..\RqSimConsole\RqSimConsole.csproj">
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+		</ProjectReference>
+
+		<!-- DX12 backend as direct reference (primary renderer) -->
+
+		<!-- Veldrid backend loaded as isolated plugin to avoid Vortice DLL conflicts -->
+		<!-- DO NOT add ProjectReference to RqSimRenderVeldrid - it's loaded dynamically -->
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Forms\3DVisual\GDI+\PartialForm3D.Targets.cs" />
+		<Compile Update="Forms\3DVisual\GDI+\PartialForm3D.cs" />
+		<Compile Update="Forms\MainForm\Form_Main.TopEvents.cs" />
+		<Compile Update="Forms\PartialForms\Form_Main_UniPipelineState.cs" />
+		<Compile Update="Forms\PartialForms\Form_Main_Standalone3dForm.cs" />
+		<Compile Update="Forms\PartialForms\Form_Main_RqConsole.cs" />
+		<Compile Update="Forms\UniPipelineForm\Form_Main.cs" />
+	</ItemGroup>
+
+	<!-- Copy RqSimConsole output to RqSimUI output folder -->
+	<Target Name="CopyRqSimConsoleToUiOutput" AfterTargets="Build">
+		<PropertyGroup>
+			<!-- Navigate from RqSimUI project directory to sibling RqSimConsole project -->
+			<!-- $(MSBuildProjectDirectory) = C:\...\RqSimulator\RqSimUI -->
+			<!-- We need C:\...\RqSimulator\RqSimConsole\bin\... -->
+			<_ConsoleProjectDir>$(MSBuildProjectDirectory)\..\RqSimConsole\</_ConsoleProjectDir>
+			<!-- RqSimConsole uses net10.0-windows (no Windows SDK version suffix) -->
+			<_ConsoleTfm>net10.0-windows</_ConsoleTfm>
+			<_ConsoleSourceDir>$(_ConsoleProjectDir)bin\$(Configuration)\$(_ConsoleTfm)\</_ConsoleSourceDir>
+			<_UiOutDir>$(TargetDir)</_UiOutDir>
+			<_ConsoleExe>$(_ConsoleSourceDir)RqSimConsole.exe</_ConsoleExe>
+		</PropertyGroup>
+
+		<Message Importance="High" Text="[CopyRqSimConsole] ProjectDir: $(MSBuildProjectDirectory)" />
+		<Message Importance="High" Text="[CopyRqSimConsole] Source: $(_ConsoleSourceDir)" />
+
+		<ItemGroup>
+			<_ConsoleFiles Include="$(_ConsoleSourceDir)**\*.*" Condition="Exists('$(_ConsoleExe)')" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(_ConsoleFiles)" DestinationFiles="@(_ConsoleFiles->'$(_UiOutDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" Condition="'@(_ConsoleFiles)' != ''" />
+		
+		<Message Importance="High" Text="[CopyRqSimConsole] Copied files to $(_UiOutDir)" Condition="'@(_ConsoleFiles)' != ''" />
+		
+		<Warning Text="RqSimConsole.exe not found at '$(_ConsoleExe)'. Build RqSimConsole first, or Console dispatcher will not be available." Condition="!Exists('$(_ConsoleExe)')" />
+	</Target>
+
+	<!-- Copy Veldrid backend plugin to isolated folder (avoids Vortice DLL conflicts) -->
+	<!-- Disabled: full migration to native DX12, no Veldrid plugin should be shipped/loaded -->
+	<!--
+	<Target Name="CopyVeldridPlugin" AfterTargets="Build">
+		<PropertyGroup>
+			<_VeldridSourceDir>$(SolutionDir)RqSimRenderVeldrid\bin\$(Configuration)\$(TargetFramework)\</_VeldridSourceDir>
+		</PropertyGroup>
+
+		<ItemGroup>
+			<_VeldridFiles Include="$(_VeldridSourceDir)**\*.*" Exclude="$(_VeldridSourceDir)**\RqSimRenderingEngine.Abstractions.*" />
+		</ItemGroup>
+
+		<Message Importance="High" Text="Copying Veldrid backend from '$(_VeldridSourceDir)' to '$(TargetDir)Plugins\Veldrid\'" />
+		<Copy SourceFiles="@(_VeldridFiles)" DestinationFolder="$(TargetDir)Plugins\Veldrid\%(RecursiveDir)" SkipUnchangedFiles="true" />
+	</Target>
+	-->
+
+</Project>
