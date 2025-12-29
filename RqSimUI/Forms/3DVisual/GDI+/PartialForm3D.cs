@@ -91,7 +91,7 @@ public partial class Form_Main
         // Mode Selection
         var lblMode = new Label { Text = "Color Mode:", ForeColor = Color.White, AutoSize = true, Margin = new Padding(0, 0, 0, 5) };
         _cmbVisMode = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160, BackColor = Color.FromArgb(40, 40, 40), ForeColor = Color.White };
-        _cmbVisMode.Items.AddRange(new object[] { "Depth", "State", "Clusters", "Quantum", "Manifold" });
+        _cmbVisMode.Items.AddRange(new object[] { "Depth", "State", "Clusters", "Quantum", "Manifold", "Target" });
         _cmbVisMode.SelectedIndex = 0;
         _cmbVisMode.SelectedIndexChanged += (s, e) => { _visualMode = _cmbVisMode.SelectedItem?.ToString() ?? "Depth"; _panel3D.Invalidate(); };
 

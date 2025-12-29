@@ -134,10 +134,23 @@ public partial class Form_Rsim3DForm
     /// </summary>
     private void UpdateTargetMetrics(GraphRenderData data)
     {
-        // For now, use spectral dimension as proxy
         double dS = data.SpectralDimension;
 
-        if (double.IsNaN(dS) || dS <= 0) return;
+        if (double.IsNaN(dS) || dS <= 0)
+        {
+            _massGapValue = double.NaN;
+            _speedOfLightVariance = double.NaN;
+            _ricciCurvatureAvg = double.NaN;
+            _hausdorffDimension = double.NaN;
+
+            _massGapStatus = TargetStatus.Failed;
+            _speedOfLightStatus = TargetStatus.Failed;
+            _ricciFlatnessStatus = TargetStatus.Failed;
+            _holographicStatus = TargetStatus.Failed;
+
+            _targetStatusPanel?.Invalidate();
+            return;
+        }
 
         // Approximate target statuses based on d_S
         // d_S ? 4 is the target for 4D spacetime emergence
@@ -163,10 +176,11 @@ public partial class Form_Rsim3DForm
             _holographicStatus = TargetStatus.Searching;
         }
 
-        // Update display values (approximations)
-        _massGapValue = dS > 2 ? 0.1 * (4.0 - dS) : double.NaN;
-        _speedOfLightVariance = dS > 2 ? 0.01 * Math.Abs(4.0 - dS) : double.NaN;
-        _ricciCurvatureAvg = dS > 2 ? 0.5 * (dS - 4.0) : double.NaN;
+        // Update display values (heuristic approximations)
+        // Keep numbers stable for UI: no negative mass gap, bounded variance, bounded Ricci proxy.
+        _massGapValue = dS > 2 ? Math.Max(0.0, 0.1 * (4.0 - dS)) : double.NaN;
+        _speedOfLightVariance = dS > 2 ? Math.Clamp(0.01 * Math.Abs(4.0 - dS), 0.0, 1.0) : double.NaN;
+        _ricciCurvatureAvg = dS > 2 ? Math.Clamp(0.5 * (dS - 4.0), -10.0, 10.0) : double.NaN;
         _hausdorffDimension = dS;
 
         _targetStatusPanel?.Invalidate();

@@ -3,6 +3,7 @@ using System.Linq;
 using ImGuiNET;
 using RqSimRenderingEngine.Abstractions;
 using RqSimRenderingEngine.Rendering.Backend.DX12;
+using RqSimRenderingEngine.Rendering.Backend.DX12.Rendering;
 using RQSimulation;
 using Vortice.Mathematics;
 
@@ -32,6 +33,41 @@ public partial class Form_Main
         if (_csrRenderHost is null) return;
         if (tabControl_Main.SelectedTab == tabPage_3DVisualCSR)
             RenderCsrVisualizationFrame();
+    }
+
+    /// <summary>
+    /// Clears all cached graph data and resets the renderer buffers.
+    /// Called when starting a new simulation to prevent "ghost" data.
+    /// </summary>
+    private void ClearCsrVisualizationData()
+    {
+        _csrNodeCount = 0;
+        _csrEdgeCount = 0;
+        _csrNodeX = null;
+        _csrNodeY = null;
+        _csrNodeZ = null;
+        _csrNodeStates = null;
+        _csrEdgeList?.Clear();
+
+        // Clear the cached graph from previous session to prevent "ghost" overlay
+        _simApi?.ClearCachedGraph();
+
+        // Reset manifold embedding state
+        ResetManifoldEmbedding();
+
+        // Clear renderer buffers
+        if (_csrRenderHost is Dx12RenderHost dx12Host)
+        {
+            dx12Host.SetNodeInstances(Array.Empty<Dx12NodeInstance>(), 0);
+            dx12Host.SetEdgeVertices(Array.Empty<Dx12LineVertex>(), 0);
+        }
+
+        // Clear standalone form if open
+        _standalone3DForm?.ClearData();
+
+        // Force overlay update
+        _csrIsWaitingForData = true;
+        UpdateCsrWaitingLabelVisibility(true);
     }
 
     private void RenderCsrVisualizationFrame()
@@ -539,8 +575,10 @@ public partial class Form_Main
         if (_csrDx12Host?.IsDeviceLost == true)
             return;
 
-        // Controls hint at bottom
-        ImGui.SetNextWindowPos(new Vector2(10, (float)((_csrRenderPanel?.Height ?? 600) - 50)), ImGuiCond.Always);
+        // Controls hint at bottom - shifted right to avoid overlapping with left panel scrollbar
+        // Leave extra space for the left controls panel + metrics panel.
+        float leftMargin = Math.Max(280f, (_csrControlsHostPanel?.Width ?? 0) + 40f);
+        ImGui.SetNextWindowPos(new Vector2(leftMargin, (float)((_csrRenderPanel?.Height ?? 600) - 50)), ImGuiCond.Always);
         ImGui.SetNextWindowBgAlpha(0.5f);
         if (ImGui.Begin("##Controls", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize))
         {

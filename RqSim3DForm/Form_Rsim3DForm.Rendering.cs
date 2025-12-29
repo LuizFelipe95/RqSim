@@ -7,20 +7,41 @@ namespace RqSim3DForm;
 
 public partial class Form_Rsim3DForm
 {
+    /// <summary>
+    /// Indicates whether the simulation is currently running.
+    /// Used to control animation/physics updates in the visualization.
+    /// </summary>
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public bool IsSimulationRunning { get; set; }
+
+    /// <summary>
+    /// Reentry guard to prevent overlapping render ticks.
+    /// </summary>
+    private bool _isRendering;
+
     private void RenderTimer_Tick(object? sender, EventArgs e)
     {
+        // Reentry guard: skip tick if previous frame is still rendering
+        if (_isRendering) return;
+
         if (_renderHost is null || _dx12Host?.IsDeviceLost == true)
             return;
 
+        _isRendering = true;
         try
         {
             UpdateGraphData();
 
-            // Apply manifold embedding if enabled
-            ApplyManifoldEmbedding();
+            // Apply manifold embedding if enabled (matching GDI+ behavior)
+            // Unlike previous version, we apply manifold even when simulation is stopped
+            // to maintain the "breathing" dynamics that users expect
+            if (_enableManifoldEmbedding)
+            {
+                ApplyManifoldEmbedding();
+            }
 
-            // Update target metrics
-            if (_showTargetOverlay && _nodeCount > 0)
+            // Update target metrics only if overlay is shown (matching CSR behavior)
+            if (_showTargetOverlay && _nodeCount > 0 && _nodeX != null && _nodeY != null && _nodeZ != null)
             {
                 var data = new GraphRenderData(_nodeX, _nodeY, _nodeZ, _nodeStates, _edges, _nodeCount, _spectralDim);
                 UpdateTargetMetrics(data);
@@ -44,37 +65,57 @@ public partial class Form_Rsim3DForm
                 _lastDebugLog = DateTime.Now;
             }
         }
+        finally
+        {
+            _isRendering = false;
+        }
     }
 
     private void UpdateGraphData()
     {
-        if (_getGraphData is null) return;
+        if (_getGraphData is null)
+            return;
 
         try
         {
             var data = _getGraphData();
-            
-            // Don't overwrite positions if manifold embedding is active and we already have data
-            // Manifold embedding modifies _nodeX/Y/Z in place and we need to preserve those changes
-            bool preservePositions = _enableManifoldEmbedding && _embeddingInitialized && 
-                                     _nodeCount == data.NodeCount && _nodeCount > 0;
 
-            if (!preservePositions)
+            if (data.NodeCount <= 0 || data.NodeX is null || data.NodeY is null || data.NodeZ is null)
             {
-                _nodeX = data.NodeX;
-                _nodeY = data.NodeY;
-                _nodeZ = data.NodeZ;
+                _nodeX = null;
+                _nodeY = null;
+                _nodeZ = null;
+                _nodeStates = null;
+                _edges = null;
+                _nodeCount = 0;
+                _spectralDim = double.NaN;
+                return;
             }
-            
-            // Always update states and edges (they come from simulation)
+
+            // Validate lengths to avoid out-of-range usage when provider returns inconsistent snapshots
+            int n = data.NodeCount;
+            if (data.NodeX.Length < n || data.NodeY.Length < n || data.NodeZ.Length < n)
+            {
+                throw new InvalidOperationException($"GraphRenderData arrays shorter than NodeCount={n}. X={data.NodeX.Length}, Y={data.NodeY.Length}, Z={data.NodeZ.Length}");
+            }
+
+            _nodeX = data.NodeX;
+            _nodeY = data.NodeY;
+            _nodeZ = data.NodeZ;
             _nodeStates = data.States;
             _edges = data.Edges;
-            _nodeCount = data.NodeCount;
+            _nodeCount = n;
             _spectralDim = data.SpectralDimension;
         }
-        catch
+        catch (Exception ex)
         {
-            // Keep last valid data
+            if ((DateTime.Now - _lastDebugLog).TotalSeconds > 1)
+            {
+                System.Diagnostics.Debug.WriteLine($"[3DForm] UpdateGraphData error: {ex.GetType().Name}: {ex.Message}");
+                _lastDebugLog = DateTime.Now;
+            }
+
+            // Keep last valid data to avoid flicker.
         }
     }
 
@@ -161,16 +202,31 @@ public partial class Form_Rsim3DForm
         }
 
         // Draw edges first (behind nodes) - use mode-based styling
+        // NOTE: ImGui 2D mode is CPU-bound; limit edges to avoid <10 FPS
         if (_showEdges && _edges is not null)
         {
-            foreach (var (u, v, w) in _edges)
+            int edgeCount = _edges.Count;
+            int maxEdgesForCpu = 800; // Beyond this, FPS drops significantly
+            int edgeStep = edgeCount > maxEdgesForCpu ? Math.Max(1, edgeCount / maxEdgesForCpu) : 1;
+            int drawnEdges = 0;
+
+            for (int idx = 0; idx < edgeCount; idx += edgeStep)
             {
+                var (u, v, w) = _edges[idx];
                 if (u < count && v < count && w >= _edgeWeightThreshold)
                 {
                     var (edgeColor, thickness) = GetEdgeStyle(u, v, w);
                     uint col = ImGui.ColorConvertFloat4ToU32(edgeColor);
                     drawList.AddLine(screenPos[u], screenPos[v], col, thickness);
+                    drawnEdges++;
                 }
+            }
+
+            // Log warning once if many edges are being sampled
+            if (edgeStep > 1 && (DateTime.Now - _lastDebugLog).TotalSeconds > 5)
+            {
+                System.Diagnostics.Debug.WriteLine($"[3DForm] ImGui 2D: Sampling edges ({drawnEdges}/{edgeCount}). Switch to GPU 3D mode for full detail.");
+                _lastDebugLog = DateTime.Now;
             }
         }
 
@@ -256,6 +312,19 @@ public partial class Form_Rsim3DForm
             _statsLabel.Invoke(() => _statsLabel.Text = stats);
         else
             _statsLabel.Text = stats;
+    }
+
+    /// <summary>
+    /// Clears cached graph data so the renderer shows "Waiting for simulation data...".
+    /// </summary>
+    public void ClearData()
+    {
+        _nodeCount = 0;
+        _nodeX = null;
+        _nodeY = null;
+        _nodeZ = null;
+        _nodeStates = null;
+        _edges = null;
     }
 }
 

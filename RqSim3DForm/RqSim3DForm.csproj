@@ -47,44 +47,42 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Dx12Vulkan\DoubleBufferedPanel.cs">
-	    <SubType>Component</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\Dx12PanelAccessor.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\Form_Main_Dx12Render.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\Form_Main_RenderBackend.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\Form_Main_RenderBackendUI.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\PartialForm3D.Quantum.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\PartialForm3D_CSR_Coloring.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\PartialForm3D_CSR_Core.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\PartialForm3D_CSR_Edges.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\PartialForm3D_CSR_Legend.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\PartialForm3D_CSR_Rendering.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Dx12Vulkan\PartialForm3D_CSR_UI.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
+		<Compile Update="Dx12Vulkan\DoubleBufferedPanel.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\Dx12PanelAccessor.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\Form_Main_Dx12Render.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\Form_Main_RenderBackend.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\Form_Main_RenderBackendUI.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\PartialForm3D.Quantum.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\PartialForm3D_CSR_Coloring.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\PartialForm3D_CSR_Core.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\PartialForm3D_CSR_Edges.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\PartialForm3D_CSR_Legend.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\PartialForm3D_CSR_Rendering.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Dx12Vulkan\PartialForm3D_CSR_UI.cs">
+			<SubType>Form</SubType>
+		</Compile>
 	</ItemGroup>
-
-
 
 </Project>

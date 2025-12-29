@@ -79,6 +79,22 @@ public partial class Form_Main
             return;
         }
 
+        // Clear previous visualization data to prevent ghosting
+        ClearCsrVisualizationData();
+
+        // Ensure embedded CSR renderer tick loop is running for the new session
+        _timerCsr3D?.Start();
+
+        // Reset GDI+ visualization state for fresh start
+        _lastSnapshot = null;
+        ResetManifoldEmbedding();
+
+        // Update standalone form state
+        if (_standalone3DForm is not null && !_standalone3DForm.IsDisposed)
+        {
+            _standalone3DForm.IsSimulationRunning = true;
+        }
+
         // Start new simulation
         _isModernRunning = true;
         _simApi.SimulationComplete = false;
@@ -293,6 +309,20 @@ public partial class Form_Main
         _isModernRunning = false;
         _simApi.CurrentSession = null;
         button_RunModernSim.Text = "Run Modern Sim";
+
+        // Update standalone form state
+        if (_standalone3DForm is not null && !_standalone3DForm.IsDisposed)
+        {
+            _standalone3DForm.IsSimulationRunning = false;
+        }
+
+        // Stop embedded CSR visualization as well
+        _timerCsr3D?.Stop();
+        ClearCsrVisualizationData();
+
+        // Reset GDI+ visualization state (so coordinates don't persist after terminate)
+        _lastSnapshot = null;
+        ResetManifoldEmbedding();
 
         // Final UI update
         DrawGraph();

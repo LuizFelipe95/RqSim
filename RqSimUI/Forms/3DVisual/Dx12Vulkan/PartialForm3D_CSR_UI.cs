@@ -122,7 +122,10 @@ public partial class Form_Main
         trackEdgeThreshold.ValueChanged += (s, e) =>
         {
             _csrEdgeWeightThreshold = trackEdgeThreshold.Value / 100.0;
+            SyncEdgeThresholdFromCsrWindow(_csrEdgeWeightThreshold);
         };
+
+        StoreCsrEdgeThresholdReference(trackEdgeThreshold);
 
         // Stats label
         _csrStatsLabel = new Label

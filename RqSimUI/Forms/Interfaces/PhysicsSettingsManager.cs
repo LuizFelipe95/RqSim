@@ -265,6 +265,9 @@ public class PhysicsSettingsManager
         config.AutoTuneGravityAdjustmentRate = liveConfig.AutoTuneGravityAdjustmentRate;
         config.AutoTuneExplorationProb = liveConfig.AutoTuneExplorationProb;
 
+        // Mode flags - captured from SimApi directly
+        config.AutoTuningEnabled = _simApi.AutoTuningEnabled;
+
         var graphHealth = _simApi.GraphHealthLive;
         config.GiantClusterThreshold = graphHealth.GiantClusterThreshold;
         config.EmergencyGiantClusterThreshold = graphHealth.EmergencyGiantClusterThreshold;

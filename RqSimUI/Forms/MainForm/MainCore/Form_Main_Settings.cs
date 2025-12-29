@@ -109,7 +109,17 @@ partial class Form_Main
             if (comboBox_Experiments.Items.Count > _formSettings.ExperimentIndex)
                 comboBox_Experiments.SelectedIndex = _formSettings.ExperimentIndex;
 
-            // остальное без изменений...
+            // === Mode Settings (Science Mode) ===
+            if (checkBox_ScienceSimMode is not null)
+            {
+                checkBox_ScienceSimMode.Checked = _formSettings.ScienceMode;
+            }
+            _scienceModeEnabled = _formSettings.ScienceMode;
+            _useOllivierRicci = _formSettings.UseOllivierRicciCurvature;
+            _enableConservation = _formSettings.EnableConservationValidation;
+            _useGpuAnisotropy = _formSettings.UseGpuAnisotropy;
+
+            // === Window State ===
             if (!_formSettings.IsMaximized)
             {
                 var screen = Screen.FromPoint(new Point(_formSettings.WindowX, _formSettings.WindowY));
@@ -314,6 +324,12 @@ partial class Form_Main
             _formSettings.WeightThresholdIndex = cmbWeightThreshold.SelectedIndex >= 0 ? cmbWeightThreshold.SelectedIndex : 0;
             _formSettings.PresetIndex = comboBox_Presets.SelectedIndex >= 0 ? comboBox_Presets.SelectedIndex : 0;
             _formSettings.ExperimentIndex = comboBox_Experiments.SelectedIndex >= 0 ? comboBox_Experiments.SelectedIndex : 0;
+
+            // === Mode Settings (Science Mode) ===
+            _formSettings.ScienceMode = checkBox_ScienceSimMode?.Checked ?? false;
+            _formSettings.UseOllivierRicciCurvature = _useOllivierRicci;
+            _formSettings.EnableConservationValidation = _enableConservation;
+            _formSettings.UseGpuAnisotropy = _useGpuAnisotropy;
 
             // === Window State ===
             _formSettings.IsMaximized = WindowState == FormWindowState.Maximized;

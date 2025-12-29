@@ -124,6 +124,35 @@ public sealed class PhysicsSettingsConfig
     public double AutoTuneExplorationProb { get; set; } = 0.05;
 
     // ============================================================
+    // MODE FLAGS (PERSISTED)
+    // ============================================================
+
+    /// <summary>
+    /// Whether Science Mode is enabled (strict physical validation, Planck-scale constants).
+    /// </summary>
+    public bool ScienceModeEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Whether Auto-Tuning is enabled.
+    /// </summary>
+    public bool AutoTuningEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Whether to use Ollivier-Ricci curvature (true) or Forman-Ricci (false).
+    /// </summary>
+    public bool UseOllivierRicciCurvature { get; set; } = true;
+
+    /// <summary>
+    /// Whether conservation validation is enabled.
+    /// </summary>
+    public bool EnableConservationValidation { get; set; } = false;
+
+    /// <summary>
+    /// Whether GPU anisotropy computation is enabled.
+    /// </summary>
+    public bool UseGpuAnisotropy { get; set; } = true;
+
+    // ============================================================
     // RQ-HYPOTHESIS EXPERIMENTAL FLAGS
     // ============================================================
 

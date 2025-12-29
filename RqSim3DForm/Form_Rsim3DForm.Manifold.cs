@@ -18,6 +18,19 @@ public partial class Form_Rsim3DForm
     private float[]? _embeddingVelocityY;
     private float[]? _embeddingVelocityZ;
 
+    // === Cached force arrays (avoid per-frame allocations) ===
+    private float[]? _forceX;
+    private float[]? _forceY;
+    private float[]? _forceZ;
+
+    // === Cached filtered edges (avoid per-frame List creation) ===
+    private List<(int u, int v, float w)>? _filteredEdgesCache;
+    private double _lastFilteredThreshold = double.NaN;
+
+    // === Throttling: skip some frames for manifold physics ===
+    private int _manifoldUpdateCounter;
+    private const int ManifoldUpdateInterval = 2; // Update every N frames
+
     // === Manifold Physics Constants (matched to original GDI+ version) ===
     private const double ManifoldRepulsionFactor = 0.5;  // Was 50.0 - way too high!
     private const double ManifoldSpringFactor = 0.8;     // Was 0.5
@@ -36,6 +49,11 @@ public partial class Form_Rsim3DForm
         _embeddingVelocityX = null;
         _embeddingVelocityY = null;
         _embeddingVelocityZ = null;
+        _forceX = null;
+        _forceY = null;
+        _forceZ = null;
+        _filteredEdgesCache = null;
+        _lastFilteredThreshold = double.NaN;
     }
 
     /// <summary>
@@ -49,6 +67,9 @@ public partial class Form_Rsim3DForm
         _embeddingVelocityX = new float[n];
         _embeddingVelocityY = new float[n];
         _embeddingVelocityZ = new float[n];
+        _forceX = new float[n];
+        _forceY = new float[n];
+        _forceZ = new float[n];
 
         for (int i = 0; i < n; i++)
         {
@@ -79,9 +100,20 @@ public partial class Form_Rsim3DForm
         if (_embeddingVelocityX.Length != n || _embeddingPositionX.Length != n) return;
         if (edges == null) return;
 
-        float[] forceX = new float[n];
-        float[] forceY = new float[n];
-        float[] forceZ = new float[n];
+        // Reuse cached force arrays (avoid allocation every frame)
+        if (_forceX == null || _forceX.Length != n)
+        {
+            _forceX = new float[n];
+            _forceY = new float[n];
+            _forceZ = new float[n];
+        }
+        else
+        {
+            // Clear arrays
+            Array.Clear(_forceX, 0, n);
+            Array.Clear(_forceY!, 0, n);
+            Array.Clear(_forceZ!, 0, n);
+        }
 
         // Calculate center of mass
         float comX = 0, comY = 0, comZ = 0;
@@ -104,9 +136,9 @@ public partial class Form_Rsim3DForm
             float dist = MathF.Sqrt(dx * dx + dy * dy + dz * dz) + 0.1f;
 
             float repulsion = (float)(ManifoldRepulsionFactor / (dist * dist));
-            forceX[i] += dx / dist * repulsion;
-            forceY[i] += dy / dist * repulsion;
-            forceZ[i] += dz / dist * repulsion;
+            _forceX[i] += dx / dist * repulsion;
+            _forceY![i] += dy / dist * repulsion;
+            _forceZ![i] += dz / dist * repulsion;
         }
 
         // 2. Spring attraction along edges
@@ -126,12 +158,12 @@ public partial class Form_Rsim3DForm
             float fy = dy / dist * springForce;
             float fz = dz / dist * springForce;
 
-            forceX[u] += fx;
-            forceY[u] += fy;
-            forceZ[u] += fz;
-            forceX[v] -= fx;
-            forceY[v] -= fy;
-            forceZ[v] -= fz;
+            _forceX[u] += fx;
+            _forceY![u] += fy;
+            _forceZ![u] += fz;
+            _forceX[v] -= fx;
+            _forceY[v] -= fy;
+            _forceZ[v] -= fz;
         }
 
         // 3. Integration with damping
@@ -140,9 +172,9 @@ public partial class Form_Rsim3DForm
 
         for (int i = 0; i < n; i++)
         {
-            _embeddingVelocityX[i] = (_embeddingVelocityX[i] + forceX[i] * dt) * damping;
-            _embeddingVelocityY![i] = (_embeddingVelocityY[i] + forceY[i] * dt) * damping;
-            _embeddingVelocityZ![i] = (_embeddingVelocityZ[i] + forceZ[i] * dt) * damping;
+            _embeddingVelocityX[i] = (_embeddingVelocityX[i] + _forceX[i] * dt) * damping;
+            _embeddingVelocityY![i] = (_embeddingVelocityY[i] + _forceY![i] * dt) * damping;
+            _embeddingVelocityZ![i] = (_embeddingVelocityZ[i] + _forceZ![i] * dt) * damping;
 
             _embeddingPositionX[i] += _embeddingVelocityX[i] * dt;
             _embeddingPositionY![i] += _embeddingVelocityY[i] * dt;
@@ -157,6 +189,7 @@ public partial class Form_Rsim3DForm
 
     /// <summary>
     /// Applies manifold embedding to graph data if enabled.
+    /// Throttled to run every N frames to reduce CPU load.
     /// </summary>
     private void ApplyManifoldEmbedding()
     {
@@ -164,26 +197,76 @@ public partial class Form_Rsim3DForm
         if (_nodeX == null || _nodeY == null || _nodeZ == null) return;
         if (_nodeCount == 0) return;
 
+        // Throttle: only update manifold physics every N frames
+        _manifoldUpdateCounter++;
+        if (_manifoldUpdateCounter < ManifoldUpdateInterval)
+        {
+            // Still apply cached positions even on skipped frames
+            if (_embeddingInitialized && _embeddingPositionX != null && _embeddingPositionX.Length == _nodeCount)
+            {
+                for (int i = 0; i < _nodeCount; i++)
+                {
+                    _nodeX[i] = _embeddingPositionX[i];
+                    _nodeY[i] = _embeddingPositionY![i];
+                    _nodeZ[i] = _embeddingPositionZ![i];
+                }
+            }
+            return;
+        }
+        _manifoldUpdateCounter = 0;
+
         if (NeedsManifoldInitialization(_nodeCount))
         {
             InitializeManifoldPositions(_nodeCount, _nodeX, _nodeY, _nodeZ);
         }
-
-        // Filter edges by threshold for manifold physics (matching CSR behavior)
-        // Manifold should only use edges above threshold for force calculations
-        List<(int u, int v, float w)>? filteredEdges = null;
-        if (_edges is not null)
+        else
         {
-            filteredEdges = new List<(int, int, float)>(_edges.Count);
-            foreach (var (u, v, w) in _edges)
+            // Copy fresh data into embedding buffers BEFORE physics update
+            // This is important: source data changes each frame, but we run physics
+            // on the embedding positions, then copy result back to display positions
+            for (int i = 0; i < _nodeCount && i < _embeddingPositionX!.Length; i++)
             {
-                if (w >= _edgeWeightThreshold)
-                {
-                    filteredEdges.Add((u, v, w));
-                }
+                // Blend: use 80% embedding position + 20% fresh data for stability
+                // This allows new nodes/changes to propagate while maintaining dynamics
+                float blendFactor = 0.2f;
+                _embeddingPositionX[i] = _embeddingPositionX[i] * (1 - blendFactor) + _nodeX[i] * blendFactor;
+                _embeddingPositionY![i] = _embeddingPositionY[i] * (1 - blendFactor) + _nodeY[i] * blendFactor;
+                _embeddingPositionZ![i] = _embeddingPositionZ[i] * (1 - blendFactor) + _nodeZ[i] * blendFactor;
             }
         }
 
-        UpdateManifoldEmbedding(_nodeCount, _nodeX, _nodeY, _nodeZ, filteredEdges);
+        // Build filtered edges list for spring forces
+        // Cache this to avoid re-filtering every frame
+        List<(int u, int v, float w)>? edges = null;
+        if (_edges != null && _edges.Count > 0)
+        {
+            double threshold = _edgeWeightThreshold;
+            if (_filteredEdgesCache == null || Math.Abs(_lastFilteredThreshold - threshold) > 0.001)
+            {
+                _filteredEdgesCache ??= new List<(int u, int v, float w)>(_edges.Count);
+                _filteredEdgesCache.Clear();
+                
+                foreach (var (u, v, w) in _edges)
+                {
+                    if (w >= threshold)
+                    {
+                        _filteredEdgesCache.Add((u, v, w));
+                    }
+                }
+                _lastFilteredThreshold = threshold;
+            }
+            edges = _filteredEdgesCache;
+        }
+
+        // Run physics update on EMBEDDING positions (not source _nodeX/Y/Z)
+        UpdateManifoldEmbedding(_nodeCount, _embeddingPositionX!, _embeddingPositionY!, _embeddingPositionZ!, edges);
+
+        // Copy results back to display arrays
+        for (int i = 0; i < _nodeCount && i < _embeddingPositionX!.Length; i++)
+        {
+            _nodeX[i] = _embeddingPositionX[i];
+            _nodeY[i] = _embeddingPositionY![i];
+            _nodeZ[i] = _embeddingPositionZ![i];
+        }
     }
 }

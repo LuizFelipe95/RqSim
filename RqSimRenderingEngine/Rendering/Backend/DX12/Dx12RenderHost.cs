@@ -333,9 +333,11 @@ public unsafe class Dx12RenderHost : IRenderHost
         // WARP is slower but sufficient for UI rendering and small-scale 3D visualization.
         // For production use, consider implementing shared device with ComputeSharp.
         
-        bool useWarp = true; // Force WARP to avoid ComputeSharp conflict
+        // Stop forcing WARP (software) device by default. Use hardware by default and only fall back to WARP.
+        // Keep an opt-in env var to force WARP for troubleshooting and keep existing debug-layer behavior.
+        bool useWarp = false;
         bool debugLayerEnabled = false;
-        
+
 #if DEBUG
         string? forceDebug = Environment.GetEnvironmentVariable("DX12_FORCE_DEBUG_LAYER");
         if (forceDebug == "1")
@@ -358,13 +360,13 @@ public unsafe class Dx12RenderHost : IRenderHost
         {
             System.Diagnostics.Debug.WriteLine("[DX12] Debug layer disabled");
         }
-        
-        // Allow disabling WARP via environment variable for testing
-        string? forceHardware = Environment.GetEnvironmentVariable("DX12_FORCE_HARDWARE");
-        if (forceHardware == "1")
+
+        // Force WARP only when explicitly requested.
+        string? forceWarp = Environment.GetEnvironmentVariable("DX12_FORCE_WARP");
+        if (forceWarp == "1")
         {
-            useWarp = false;
-            System.Diagnostics.Debug.WriteLine("[DX12] Forcing hardware adapter (DX12_FORCE_HARDWARE=1) - may conflict with ComputeSharp!");
+            useWarp = true;
+            System.Diagnostics.Debug.WriteLine("[DX12] Forcing WARP adapter (DX12_FORCE_WARP=1)");
         }
 #endif
 
@@ -372,8 +374,8 @@ public unsafe class Dx12RenderHost : IRenderHost
 
         IDXGIAdapter1? adapter = null;
         string? adapterName = null;
-        
-        // Use WARP adapter to avoid conflict with ComputeSharp's hardware device
+
+        // Try WARP only if explicitly forced
         if (useWarp)
         {
             System.Diagnostics.Debug.WriteLine("[DX12] Trying WARP adapter...");
@@ -393,23 +395,20 @@ public unsafe class Dx12RenderHost : IRenderHost
                     {
                         warpAdapter.Dispose();
                         System.Diagnostics.Debug.WriteLine($"[DX12] WARP failed: 0x{result.Code:X8}");
-                        useWarp = false;
                     }
                 }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("[DX12] WARP not available");
-                    useWarp = false;
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[DX12] WARP error: {ex.Message}");
-                useWarp = false;
             }
         }
-        
-        // Fallback to hardware adapter if WARP not available
+
+        // Prefer hardware adapter; fall back to WARP only if no hardware is available
         if (adapter is null)
         {
             System.Diagnostics.Debug.WriteLine("[DX12] Trying hardware adapters...");
@@ -417,7 +416,7 @@ public unsafe class Dx12RenderHost : IRenderHost
             {
                 var desc = tempAdapter.Description1;
                 System.Diagnostics.Debug.WriteLine($"[DX12] Adapter {i}: {desc.Description}");
-                
+
                 if ((desc.Flags & AdapterFlags.Software) != AdapterFlags.None)
                 {
                     System.Diagnostics.Debug.WriteLine($"[DX12] Skipping software adapter: {desc.Description}");
@@ -425,7 +424,6 @@ public unsafe class Dx12RenderHost : IRenderHost
                     continue;
                 }
 
-                // Try creating device with this adapter
                 var result = D3D12CreateDevice(tempAdapter, FeatureLevel.Level_11_0, out ID3D12Device? tempDevice);
                 if (result.Success && tempDevice is not null)
                 {
@@ -440,8 +438,30 @@ public unsafe class Dx12RenderHost : IRenderHost
             }
         }
 
+        // Hardware failed: fall back to WARP as a last resort
         if (adapter is null)
-            throw new InvalidOperationException("No compatible DirectX 12 adapter found (including WARP).");
+        {
+            System.Diagnostics.Debug.WriteLine("[DX12] Hardware adapter not available, falling back to WARP...");
+            if (factory.EnumWarpAdapter(out IDXGIAdapter1? warpAdapter).Success && warpAdapter is not null)
+            {
+                var result = D3D12CreateDevice(warpAdapter, FeatureLevel.Level_11_0, out ID3D12Device? warpDevice);
+                if (result.Success && warpDevice is not null)
+                {
+                    warpDevice.Dispose();
+                    adapter = warpAdapter;
+                    adapterName = "WARP (Software)";
+                    System.Diagnostics.Debug.WriteLine("[DX12] WARP adapter OK (fallback)");
+                }
+                else
+                {
+                    warpAdapter.Dispose();
+                    System.Diagnostics.Debug.WriteLine($"[DX12] WARP failed: 0x{result.Code:X8}");
+                }
+            }
+        }
+
+        if (adapter is null)
+            throw new InvalidOperationException("No compatible DirectX 12 adapter found (hardware or WARP).");
 
         try
         {

@@ -283,9 +283,19 @@ public partial class Form_Main
             // Update panel display
             _pnlTargetStatus?.Invalidate();
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently handle metric computation errors
+            System.Diagnostics.Debug.WriteLine($"[GDI+ Targets] Metric computation failed: {ex.GetType().Name}: {ex.Message}");
+            _massGapStatus = TargetStatus.Failed;
+            _speedOfLightStatus = TargetStatus.Failed;
+            _ricciFlatnessStatus = TargetStatus.Failed;
+            _holographicStatus = TargetStatus.Failed;
+            _massGapValue = double.NaN;
+            _speedOfLightVariance = double.NaN;
+            _speedOfLightMean = double.NaN;
+            _ricciCurvatureAvg = double.NaN;
+            _hausdorffDimension = double.NaN;
+            _pnlTargetStatus?.Invalidate();
         }
     }
 

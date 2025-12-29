@@ -55,16 +55,19 @@ partial class Form_Main
     private void TrkEdgeThreshold_ValueChanged(object? sender, EventArgs e)
     {
         if (_trkEdgeThreshold is null) return;
-        
+
         _edgeThresholdValue = _trkEdgeThreshold.Value / 100.0;
-        
+
         if (_lblEdgeThresholdValue is not null)
         {
             _lblEdgeThresholdValue.Text = _edgeThresholdValue.ToString("F2");
         }
-        
+
+        // Keep display filter threshold consistent
+        _displayWeightThreshold = _edgeThresholdValue;
+
         // Sync to CSR visualization
-        SyncEdgeThresholdToCsrVisualization();
+        SyncEdgeThresholdToCsrWindow();
     }
 
     /// <summary>
@@ -116,9 +119,12 @@ partial class Form_Main
         {
             _lblEdgeThresholdValue.Text = _edgeThresholdValue.ToString("F2");
         }
-        
+
+        // Keep display filter threshold consistent
+        _displayWeightThreshold = _edgeThresholdValue;
+
         // Sync to CSR visualization
-        SyncEdgeThresholdToCsrVisualization();
+        SyncEdgeThresholdToCsrWindow();
     }
 
     /// <summary>

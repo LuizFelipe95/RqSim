@@ -75,6 +75,27 @@ public sealed class FormSettings
     public int PresetIndex { get; set; } = 0;
     public int ExperimentIndex { get; set; } = 0;
 
+    // === Mode Settings ===
+    /// <summary>
+    /// Science Mode enabled state (strict physical validation).
+    /// </summary>
+    public bool ScienceMode { get; set; } = false;
+
+    /// <summary>
+    /// Use Ollivier-Ricci curvature (true) or Forman-Ricci (false).
+    /// </summary>
+    public bool UseOllivierRicciCurvature { get; set; } = true;
+
+    /// <summary>
+    /// Enable conservation validation in Science Mode.
+    /// </summary>
+    public bool EnableConservationValidation { get; set; } = false;
+
+    /// <summary>
+    /// Use GPU for anisotropy computation.
+    /// </summary>
+    public bool UseGpuAnisotropy { get; set; } = true;
+
     // === Window State ===
     public int WindowWidth { get; set; } = 1359;
     public int WindowHeight { get; set; } = 737;

@@ -49,6 +49,14 @@ public partial class RqSimEngineApi
             _lastActiveGraph = graph;
     }
 
+    /// <summary>
+    /// Clears the cached graph reference. Called when starting a new simulation.
+    /// </summary>
+    public void ClearCachedGraph()
+    {
+        _lastActiveGraph = null;
+    }
+
     // === Default Pipeline (available before simulation starts) ===
     private PhysicsPipeline? _defaultPipeline;
 

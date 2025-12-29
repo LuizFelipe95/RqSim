@@ -10,6 +10,18 @@ public partial class Form_Main
 {
     private Form_Rsim3DForm? _standalone3DForm;
 
+    // Standalone DX12 provider cache to reduce allocations/GC pressure
+    private float[]? _standaloneNodeX;
+    private float[]? _standaloneNodeY;
+    private float[]? _standaloneNodeZ;
+    private NodeState[]? _standaloneStates;
+    private List<(int, int, float)>? _standaloneEdges;
+    private int _standaloneCachedN;
+    private int _standaloneEdgeRebuildCounter;
+
+    // Cached spectral dimension for display continuity
+    private double _standaloneCachedSpectralDim = double.NaN;
+
     /// <summary>
     /// Opens or closes standalone 3D visualization form.
     /// </summary>
@@ -60,18 +72,36 @@ public partial class Form_Main
     /// </summary>
     private GraphRenderData GetGraphDataForStandalone3D()
     {
-        RQGraph? graph = _simApi?.ActiveGraph ?? _simApi?.SimulationEngine?.Graph;
-        
-        if (graph is null || graph.N == 0)
+        // Prefer live graph while simulation is running; fall back to cached ActiveGraph only when engine graph is unavailable.
+        RQGraph? graph = _simApi?.SimulationEngine?.Graph ?? _simApi?.ActiveGraph;
+
+        if (graph is null)
         {
+            _standaloneCachedN = 0;
+            _standaloneEdges?.Clear();
+            _standaloneCachedSpectralDim = double.NaN;
             return new GraphRenderData(null, null, null, null, null, 0, 0);
         }
 
         int n = graph.N;
-        var nodeX = new float[n];
-        var nodeY = new float[n];
-        var nodeZ = new float[n];
-        var states = new NodeState[n];
+        if (n <= 0)
+        {
+            _standaloneCachedN = 0;
+            _standaloneEdges?.Clear();
+            _standaloneCachedSpectralDim = double.NaN;
+            return new GraphRenderData(null, null, null, null, null, 0, 0);
+        }
+
+        if (_standaloneNodeX is null || _standaloneNodeX.Length != n)
+        {
+            _standaloneNodeX = new float[n];
+            _standaloneNodeY = new float[n];
+            _standaloneNodeZ = new float[n];
+            _standaloneStates = new NodeState[n];
+            _standaloneCachedN = n;
+            _standaloneEdgeRebuildCounter = 0;
+            _standaloneCachedSpectralDim = double.NaN; // Reset cached spectral dim on graph size change
+        }
 
         // Use SpectralX/Y/Z if available
         bool hasSpectral = graph.SpectralX is not null && graph.SpectralX.Length == n;
@@ -80,10 +110,10 @@ public partial class Form_Main
         {
             for (int i = 0; i < n; i++)
             {
-                nodeX[i] = (float)graph.SpectralX![i];
-                nodeY[i] = (float)graph.SpectralY![i];
-                nodeZ[i] = (float)graph.SpectralZ![i];
-                states[i] = graph.State[i];
+                _standaloneNodeX![i] = (float)graph.SpectralX![i];
+                _standaloneNodeY![i] = (float)graph.SpectralY![i];
+                _standaloneNodeZ![i] = (float)graph.SpectralZ![i];
+                _standaloneStates![i] = graph.State[i];
             }
         }
         else
@@ -95,37 +125,78 @@ public partial class Form_Main
             {
                 int gx = i % gridSize;
                 int gy = i / gridSize;
-                nodeX[i] = (gx - gridSize / 2f) * spacing;
-                nodeY[i] = (gy - gridSize / 2f) * spacing;
-                nodeZ[i] = 0f;
-                states[i] = graph.State[i];
+                _standaloneNodeX![i] = (gx - gridSize / 2f) * spacing;
+                _standaloneNodeY![i] = (gy - gridSize / 2f) * spacing;
+                _standaloneNodeZ![i] = 0f;
+                _standaloneStates![i] = graph.State[i];
             }
         }
 
-        // Build edges - collect all edges, threshold filtering will be done in standalone form
-        // This matches CSR behavior where edges are filtered during rendering
-        var edges = new List<(int, int, float)>(n * 4);
-        int step = Math.Max(1, n / 500); // Sample edges for large graphs (same as CSR)
+        // Build edges.
+        // This is expensive for large graphs, so we reuse a cached list and rebuild periodically.
+        // Rendering-side threshold filtering still applies.
+        _standaloneEdges ??= new List<(int, int, float)>(n * 4);
 
-        for (int i = 0; i < n; i += step)
+        bool graphSizeChanged = _standaloneCachedN != n;
+        _standaloneEdgeRebuildCounter++;
+        int rebuildPeriodFrames = _simApi?.SimulationEngine?.Graph is not null ? 4 : 30; // Rebuild more often while running, less often when stopped
+
+        if (graphSizeChanged || _standaloneEdges.Count == 0 || _standaloneEdgeRebuildCounter >= rebuildPeriodFrames)
         {
-            foreach (int j in graph.Neighbors(i))
+            _standaloneEdgeRebuildCounter = 0;
+            _standaloneCachedN = n;
+
+            _standaloneEdges.Clear();
+
+            int step = Math.Max(1, n / 500); // Sample edges for large graphs (same as CSR)
+            for (int i = 0; i < n; i += step)
             {
-                if (j > i) // Avoid duplicate edges
+                foreach (int j in graph.Neighbors(i))
                 {
-                    float w = (float)graph.Weights[i, j];
-                    // Pass all edges with weight > 0, threshold filtering happens in renderer
-                    if (w > 0.01f)
+                    if (j > i)
                     {
-                        edges.Add((i, j, w));
+                        float w = (float)graph.Weights[i, j];
+                        if (w > 0.01f)
+                        {
+                            _standaloneEdges.Add((i, j, w));
+                        }
                     }
                 }
             }
         }
 
-        return new GraphRenderData(nodeX, nodeY, nodeZ, states, edges, n, graph.SmoothedSpectralDimension);
+        // Get spectral dimension - use SmoothedSpectralDimension only (cheap property read)
+        double spectralDim = graph.SmoothedSpectralDimension;
+        
+        // Cache valid values for display continuity when SmoothedSpectralDimension temporarily returns NaN
+        if (!double.IsNaN(spectralDim) && spectralDim > 0)
+        {
+            _standaloneCachedSpectralDim = spectralDim;
+        }
+        else if (!double.IsNaN(_standaloneCachedSpectralDim))
+        {
+            // Use last valid cached value
+            spectralDim = _standaloneCachedSpectralDim;
+        }
+        // Otherwise spectralDim remains NaN - that's fine, UI will show "---"
+
+        return new GraphRenderData(_standaloneNodeX, _standaloneNodeY, _standaloneNodeZ, _standaloneStates, _standaloneEdges, n, spectralDim);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
